@@ -1,0 +1,5 @@
+{
+  "name": "Daily Stock Counter",
+  "description": "A minimal, fast, and Android-friendly stock counting application designed for daily inventory management with automated calculations and history tracking.",
+  "requestFramePermissions": []
+}
