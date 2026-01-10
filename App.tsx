@@ -2,23 +2,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ProductCard } from './components/ProductCard';
 import { HistoryView } from './components/HistoryView';
-import { AdminStats } from './components/AdminStats';
 import { PRODUCTS } from './constants';
-import { StockCounts, HistoryData, DailyRecord, StockEntry, VerificationData } from './types';
+import { StockCounts, HistoryData, DailyRecord, StockEntry } from './types';
 
 const App: React.FC = () => {
   // --- App State ---
-  const [showAdminStats, setShowAdminStats] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showDownloadPopup, setShowDownloadPopup] = useState(false);
   const [activeDate, setActiveDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [currentCounts, setCurrentCounts] = useState<Record<string, StockCounts>>({});
   const [history, setHistory] = useState<HistoryData>({});
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving'>('idle');
 
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   // Check if any modal is currently open
-  const isAnyModalOpen = showAdminStats || showHistory;
+  const isAnyModalOpen = showHistory || showDownloadPopup;
 
   // --- Initial Data Load ---
   useEffect(() => {
@@ -50,6 +49,7 @@ const App: React.FC = () => {
     setCurrentCounts({});
     setSaveStatus('idle');
     setActiveDate(today);
+    setShowDownloadPopup(false);
   };
 
   // --- Handlers ---
@@ -61,24 +61,6 @@ const App: React.FC = () => {
         [field]: value
       }
     }));
-    if (saveStatus === 'saved') setSaveStatus('idle');
-  };
-
-  const handleVerifyRecord = (date: string, verification: VerificationData) => {
-    const record = history[date];
-    if (!record) return;
-
-    const updatedRecord: DailyRecord = {
-      ...record,
-      verification: {
-        ...verification,
-        timestamp: new Date().toISOString()
-      }
-    };
-
-    const newHistory = { ...history, [date]: updatedRecord };
-    setHistory(newHistory);
-    localStorage.setItem('stock_history', JSON.stringify(newHistory));
   };
 
   const calculateTotals = () => {
@@ -116,12 +98,15 @@ const App: React.FC = () => {
       entries: totals.entries,
       totalMiloPcs: totals.miloTotal,
       totalBeyrelsPcs: totals.beyrelsTotal,
-      verification: history[activeDate]?.verification 
     };
     const newHistory = { ...history, [activeDate]: record };
     setHistory(newHistory);
     localStorage.setItem('stock_history', JSON.stringify(newHistory));
-    setTimeout(() => setSaveStatus('saved'), 600);
+    
+    setTimeout(() => {
+      setSaveStatus('idle');
+      setShowDownloadPopup(true);
+    }, 600);
   };
 
   const prepareCaptureHTML = () => {
@@ -137,13 +122,7 @@ const App: React.FC = () => {
       <div style="padding: 30px; font-family: 'Inter', sans-serif; background: #ffffff; width: 380px; color: #1e293b; margin: 0 auto; border: 1px solid #e2e8f0;">
         <div style="background: #059669; padding: 25px; border-radius: 24px; margin-bottom: 25px; color: white; text-align: center;">
           <h1 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.05em;">Pasar Besar</h1>
-          <p style="margin: 6px 0 0; opacity: 0.9; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">Inventory Record: ${activeDate}</p>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <p style="margin: 0; font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Print Timestamp</p>
-            <p style="margin: 0; font-size: 13px; font-weight: 700;">${reportTime}</p>
-          </div>
+          <p style="margin: 6px 0 0; opacity: 0.9; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">Stock Report: ${activeDate}</p>
         </div>
         <table style="width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 25px;">
           <thead>
@@ -178,7 +157,7 @@ const App: React.FC = () => {
           </div>
         </div>
         <div style="margin-top: 35px; padding-top: 15px; border-top: 1px dashed #e2e8f0; text-align: center;">
-          <p style="margin: 0; font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">System Generated Output</p>
+          <p style="margin: 0; font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Generated: ${reportTime}</p>
           <p style="margin: 4px 0 0; font-size: 9px; color: #cbd5e1; font-weight: 500;">Developed By Mir Rabbi Hossain</p>
         </div>
       </div>
@@ -186,11 +165,10 @@ const App: React.FC = () => {
     return captureEl;
   };
 
-  const handleDownload = async () => {
+  const handleDownloadAndRedirect = async () => {
     const captureEl = prepareCaptureHTML();
     if (!captureEl) return;
     try {
-      await new Promise(r => setTimeout(r, 300));
       // @ts-ignore
       const canvas = await html2canvas(captureEl, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
       const image = canvas.toDataURL("image/png");
@@ -200,44 +178,13 @@ const App: React.FC = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      // Redirect logic: Reset and go to main
+      resetForm();
     } catch (err) {
-      alert("Error generating stock record.");
+      alert("Error generating report.");
       console.error(err);
     }
-  };
-
-  const handleShareWhatsApp = async () => {
-    const captureEl = prepareCaptureHTML();
-    if (!captureEl) return;
-    try {
-      await new Promise(r => setTimeout(r, 300));
-      // @ts-ignore
-      const canvas = await html2canvas(captureEl, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
-      if (navigator.share && navigator.canShare) {
-        canvas.toBlob(async (blob) => {
-          if (!blob) return;
-          const file = new File([blob], `Stock-${activeDate}.png`, { type: 'image/png' });
-          if (navigator.canShare({ files: [file] })) {
-            try {
-              await navigator.share({ files: [file], title: 'Pasar Besar Stock Report', text: `Stock Report for ${activeDate}` });
-            } catch (shareErr) {
-              fallbackShareText();
-            }
-          } else {
-            fallbackShareText();
-          }
-        }, 'image/png');
-      } else {
-        fallbackShareText();
-      }
-    } catch (err) {
-      fallbackShareText();
-    }
-  };
-
-  const fallbackShareText = () => {
-    const text = `*Pasar Besar Stock*\n${activeDate}\n\n🟢 *Milo:* ${totals.miloTotal} PCS\n🔵 *Beyrel's:* ${totals.beyrelsTotal} PCS`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   return (
@@ -253,7 +200,6 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowAdminStats(true)} className="bg-white/20 p-3 rounded-2xl active:scale-90 transition-all shadow-inner">📊</button>
             <button onClick={() => setShowHistory(true)} className="bg-white/20 p-3 rounded-2xl active:scale-90 transition-all shadow-inner">📅</button>
           </div>
         </div>
@@ -279,34 +225,6 @@ const App: React.FC = () => {
             >
               Return Today
             </button>
-          </div>
-        )}
-
-        {history[activeDate]?.verification && (
-          <div className={`p-4 rounded-3xl flex flex-col gap-2 border shadow-sm animate-in zoom-in-95 ${
-            history[activeDate].verification?.status === 'Ok' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
-            history[activeDate].verification?.status === 'Short' ? 'bg-red-50 border-red-100 text-red-700' :
-            'bg-amber-50 border-amber-100 text-amber-700'
-          }`}>
-            <div className="flex items-center gap-4">
-                <span className="text-2xl">
-                {history[activeDate].verification?.status === 'Ok' ? '✅' :
-                history[activeDate].verification?.status === 'Short' ? '⚠️' : '🔼'}
-                </span>
-                <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest">Stock Verification</p>
-                    <p className="text-sm font-black">
-                        {history[activeDate].verification?.status}
-                        {history[activeDate].verification?.discrepancyQuantity ? ` (${history[activeDate].verification.discrepancyQuantity} pcs)` : ''}
-                    </p>
-                </div>
-            </div>
-            {history[activeDate].verification?.note && (
-                <div className="mt-2 p-3 bg-white/50 rounded-xl text-xs italic border border-current/10">
-                    <span className="font-black uppercase text-[8px] block mb-1 opacity-60">Verification Note:</span>
-                    {history[activeDate].verification.note}
-                </div>
-            )}
           </div>
         )}
 
@@ -349,27 +267,49 @@ const App: React.FC = () => {
         </footer>
       </main>
 
+      {/* DOWNLOAD POPUP MODAL */}
+      {showDownloadPopup && (
+        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-6 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-xs rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="p-10 text-center">
+              <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">✅</div>
+              <h3 className="text-2xl font-black text-gray-900 mb-2">Stock Saved!</h3>
+              <p className="text-sm text-gray-400 leading-relaxed">Your counts are recorded. Would you like to download the report picture before finishing?</p>
+            </div>
+            <div className="p-6 space-y-3 bg-gray-50">
+              <button 
+                onClick={handleDownloadAndRedirect} 
+                className="w-full py-5 bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-emerald-100 active:scale-95 transition-all"
+              >
+                📥 Download & Reset
+              </button>
+              <button 
+                onClick={resetForm} 
+                className="w-full py-4 text-gray-400 font-black uppercase text-[10px] tracking-[0.2em] hover:text-gray-600 transition-all"
+              >
+                Skip & Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* FIXED FOOTER */}
       {!isAnyModalOpen && (
         <footer className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-4 pb-10 safe-area-inset-bottom z-40 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-300">
-          <div className="max-w-md mx-auto space-y-3">
-            {saveStatus === 'saved' || history[activeDate] ? (
-              <div className="space-y-3 animate-in slide-in-from-bottom-2">
-                <div className="flex gap-2">
-                  <button onClick={handleDownload} className="flex-1 py-4 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-2xl font-black text-sm uppercase active:scale-95 transition-all">📥 Record Image</button>
-                  <button onClick={handleShareWhatsApp} className="flex-1 py-4 bg-[#25D366] text-white rounded-2xl font-black text-sm uppercase active:scale-95 transition-all">💬 WhatsApp</button>
-                </div>
-                <button 
-                  onClick={resetForm} 
-                  className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg"
-                >
-                  ✨ Done / New Entry
-                </button>
-              </div>
-            ) : hasQuantities ? (
-              <button onClick={saveRecord} className="w-full py-5 rounded-[2rem] font-black text-lg bg-emerald-600 text-white shadow-xl uppercase tracking-widest active:scale-95 transition-all">💾 Save Counts</button>
+          <div className="max-w-md mx-auto">
+            {hasQuantities ? (
+              <button 
+                onClick={saveRecord} 
+                disabled={saveStatus === 'saving'}
+                className={`w-full py-5 rounded-[2rem] font-black text-lg text-white shadow-xl uppercase tracking-widest active:scale-95 transition-all ${
+                  saveStatus === 'saving' ? 'bg-gray-400' : 'bg-emerald-600'
+                }`}
+              >
+                {saveStatus === 'saving' ? 'Saving...' : '💾 Save & Finish'}
+              </button>
             ) : (
-              <div className="py-5 text-center text-gray-300 text-xs font-bold uppercase tracking-widest bg-gray-50/50 rounded-[2rem] border border-dashed border-gray-200">Awaiting Input</div>
+              <div className="py-5 text-center text-gray-300 text-xs font-bold uppercase tracking-widest bg-gray-50/50 rounded-[2rem] border border-dashed border-gray-200">Enter Quantities</div>
             )}
           </div>
         </footer>
@@ -381,10 +321,8 @@ const App: React.FC = () => {
             loadDataIntoView(history[date]);
             setShowHistory(false);
           }}
-          onVerifyRecord={handleVerifyRecord}
           onClose={() => setShowHistory(false)} 
         />}
-      {showAdminStats && <AdminStats history={history} onClose={() => setShowAdminStats(false)} />}
     </div>
   );
 };

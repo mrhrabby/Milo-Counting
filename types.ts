@@ -1,13 +1,4 @@
 
-export type VerificationStatus = 'Pending' | 'Ok' | 'Short' | 'Extra';
-
-export interface VerificationData {
-  status: VerificationStatus;
-  discrepancyQuantity?: number;
-  note?: string; 
-  timestamp?: string;
-}
-
 export interface Product {
   id: string;
   name: string;
@@ -31,7 +22,6 @@ export interface DailyRecord {
   entries: StockEntry[];
   totalMiloPcs: number;
   totalBeyrelsPcs: number;
-  verification?: VerificationData;
 }
 
 export interface HistoryData {
