@@ -17,8 +17,15 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, currentUser, 
   const [discrepancy, setDiscrepancy] = useState<number>(0);
   const [adminNote, setAdminNote] = useState<string>('');
 
-  const dates = Object.keys(history).sort((a, b) => b.localeCompare(a));
   const isAdmin = currentUser?.role === 'admin';
+
+  // Filter dates based on user role and ownership
+  const dates = Object.keys(history)
+    .filter(date => {
+      if (isAdmin) return true; // Admins see everything
+      return history[date].recordedByUsername === currentUser?.username; // Staff see only their own
+    })
+    .sort((a, b) => b.localeCompare(a));
 
   const handleVerifySubmit = (date: string) => {
     onVerifyRecord(date, {
@@ -45,7 +52,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, currentUser, 
         <div className="p-6 border-b flex justify-between items-center bg-gray-50/50 backdrop-blur-md">
           <div>
             <h2 className="text-2xl font-black text-gray-800 tracking-tight">History</h2>
-            <p className="text-[10px] text-gray-400 font-bold uppercase">Stored Records</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase">
+              {isAdmin ? 'All User Records' : 'My Records'}
+            </p>
           </div>
           <button 
             onClick={onClose}
@@ -59,6 +68,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, currentUser, 
             <div className="text-center py-20">
               <div className="text-4xl mb-2 opacity-20">📭</div>
               <p className="text-gray-400 font-bold text-sm">No records found yet</p>
+              {!isAdmin && <p className="text-[10px] text-gray-300 uppercase mt-2 font-black">Submitted counts will appear here</p>}
             </div>
           ) : (
             dates.map(date => {
