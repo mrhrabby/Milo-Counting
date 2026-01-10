@@ -1,31 +1,22 @@
 
 import React, { useState } from 'react';
-import { HistoryData, DailyRecord, User, VerificationStatus, VerificationData } from '../types';
+import { HistoryData, DailyRecord, VerificationStatus, VerificationData } from '../types';
 import { PRODUCTS } from '../constants';
 
 interface HistoryViewProps {
   history: HistoryData;
-  currentUser: User | null;
   onLoadRecord: (date: string) => void;
   onVerifyRecord: (date: string, verification: VerificationData) => void;
   onClose: () => void;
 }
 
-export const HistoryView: React.FC<HistoryViewProps> = ({ history, currentUser, onLoadRecord, onVerifyRecord, onClose }) => {
+export const HistoryView: React.FC<HistoryViewProps> = ({ history, onLoadRecord, onVerifyRecord, onClose }) => {
   const [verifyingDate, setVerifyingDate] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<VerificationStatus>('Pending');
   const [discrepancy, setDiscrepancy] = useState<number>(0);
   const [adminNote, setAdminNote] = useState<string>('');
 
-  const isAdmin = currentUser?.role === 'admin';
-
-  // Filter dates based on user role and ownership
-  const dates = Object.keys(history)
-    .filter(date => {
-      if (isAdmin) return true; // Admins see everything
-      return history[date].recordedByUsername === currentUser?.username; // Staff see only their own
-    })
-    .sort((a, b) => b.localeCompare(a));
+  const dates = Object.keys(history).sort((a, b) => b.localeCompare(a));
 
   const handleVerifySubmit = (date: string) => {
     onVerifyRecord(date, {
@@ -52,9 +43,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, currentUser, 
         <div className="p-6 border-b flex justify-between items-center bg-gray-50/50 backdrop-blur-md">
           <div>
             <h2 className="text-2xl font-black text-gray-800 tracking-tight">History</h2>
-            <p className="text-[10px] text-gray-400 font-bold uppercase">
-              {isAdmin ? 'All User Records' : 'My Records'}
-            </p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase">All Records</p>
           </div>
           <button 
             onClick={onClose}
@@ -68,12 +57,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, currentUser, 
             <div className="text-center py-20">
               <div className="text-4xl mb-2 opacity-20">📭</div>
               <p className="text-gray-400 font-bold text-sm">No records found yet</p>
-              {!isAdmin && <p className="text-[10px] text-gray-300 uppercase mt-2 font-black">Submitted counts will appear here</p>}
             </div>
           ) : (
             dates.map(date => {
               const record = history[date];
-              const isOwnerOrAdmin = currentUser?.role === 'admin' || record.recordedByUsername === currentUser?.username;
               const isVerified = !!record.verification && record.verification.status !== 'Pending';
               
               return (
@@ -81,7 +68,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, currentUser, 
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <span className="font-black text-emerald-600 text-lg">{date}</span>
-                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">By: {record.recordedBy}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {isVerified ? (
@@ -154,7 +140,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, currentUser, 
                           )}
 
                           <div className="space-y-1.5">
-                            <label className="text-[9px] font-black text-gray-400 uppercase ml-1">Admin Description / Notes</label>
+                            <label className="text-[9px] font-black text-gray-400 uppercase ml-1">Notes</label>
                             <textarea
                               value={adminNote}
                               onChange={(e) => setAdminNote(e.target.value)}
@@ -173,32 +159,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, currentUser, 
                     <div className="grid grid-cols-2 gap-2">
                       <button 
                         onClick={() => onLoadRecord(date)}
-                        className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                          isOwnerOrAdmin 
-                          ? 'bg-gray-900 text-white shadow-md active:scale-95' 
-                          : 'bg-gray-100 text-gray-400'
-                        }`}
+                        className="py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-gray-900 text-white shadow-md active:scale-95"
                       >
-                        {isOwnerOrAdmin ? '✏️ View & Edit' : '👁️ View Only'}
+                        ✏️ View & Edit
                       </button>
                       
-                      {isAdmin && !isVerified && (
-                        <button 
-                          onClick={() => startVerifying(date)}
-                          className="py-3 bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95"
-                        >
-                          ⚖️ Verify
-                        </button>
-                      )}
-                      
-                      {isVerified && isAdmin && (
-                        <button 
-                          onClick={() => startVerifying(date, record.verification)}
-                          className="py-3 bg-white border border-gray-200 text-gray-400 rounded-xl text-[10px] font-black uppercase"
-                        >
-                          🔄 Re-verify
-                        </button>
-                      )}
+                      <button 
+                        onClick={() => startVerifying(date, record.verification)}
+                        className="py-3 bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95"
+                      >
+                        {isVerified ? '🔄 Re-verify' : '⚖️ Verify'}
+                      </button>
                     </div>
                   )}
                 </div>

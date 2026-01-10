@@ -1,21 +1,11 @@
 
-export type UserRole = 'admin' | 'staff';
 export type VerificationStatus = 'Pending' | 'Ok' | 'Short' | 'Extra';
 
 export interface VerificationData {
   status: VerificationStatus;
   discrepancyQuantity?: number;
-  note?: string; // New field for detailed comments
-  verifiedBy?: string;
+  note?: string; 
   timestamp?: string;
-}
-
-export interface User {
-  id: string;
-  username: string;
-  password?: string; // Only stored in local list
-  role: UserRole;
-  fullName: string;
 }
 
 export interface Product {
@@ -41,11 +31,21 @@ export interface DailyRecord {
   entries: StockEntry[];
   totalMiloPcs: number;
   totalBeyrelsPcs: number;
-  recordedBy?: string; // Full name for display
-  recordedByUsername: string; // Username for access control
   verification?: VerificationData;
 }
 
 export interface HistoryData {
   [date: string]: DailyRecord;
+}
+
+// User role definition for access control levels
+export type UserRole = 'admin' | 'staff';
+
+// User structure for authentication and management features
+export interface User {
+  id: string;
+  username: string;
+  password?: string;
+  role: UserRole;
+  fullName: string;
 }

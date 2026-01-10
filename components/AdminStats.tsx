@@ -42,8 +42,8 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ history, onClose }) => {
       <div className="bg-white w-full max-w-md max-h-[95vh] rounded-t-[3rem] sm:rounded-[3rem] overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom-20 duration-500">
         <div className="px-8 pt-10 pb-6 bg-slate-50 border-b border-slate-100 flex justify-between items-start">
           <div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight">System Stats</h2>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Global Dashboard</p>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Inventory Stats</h2>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Global Analytics</p>
           </div>
           <button onClick={onClose} className="w-12 h-12 flex items-center justify-center bg-white shadow-lg border border-slate-50 text-slate-400 rounded-full active:scale-90 transition-all text-xl">✕</button>
         </div>
