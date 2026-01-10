@@ -12,10 +12,8 @@ const PREDEFINED_USERS = [
 ];
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -25,29 +23,11 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const storedUsers = JSON.parse(localStorage.getItem('pasar_besar_users') || '[]');
     const allUsers = [...PREDEFINED_USERS, ...storedUsers];
 
-    if (isLogin) {
-      const user = allUsers.find(u => u.username === username.toLowerCase() && u.password === password);
-      if (user) {
-        onLogin(user);
-      } else {
-        setError('Invalid username or password');
-      }
+    const user = allUsers.find(u => u.username === username.toLowerCase() && u.password === password);
+    if (user) {
+      onLogin(user);
     } else {
-      const exists = allUsers.some(u => u.username === username.toLowerCase());
-      if (exists) {
-        setError('Username already taken');
-      } else {
-        const newUser: User = {
-          id: Date.now().toString(),
-          username: username.toLowerCase(),
-          password,
-          fullName,
-          role: 'staff'
-        };
-        const updated = [...storedUsers, newUser];
-        localStorage.setItem('pasar_besar_users', JSON.stringify(updated));
-        onLogin(newUser);
-      }
+      setError('Invalid username or password');
     }
   };
 
@@ -63,25 +43,12 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
           <div className="mt-8">
             <h1 className="text-4xl font-black text-gray-900 tracking-tight leading-none">Pasar Besar</h1>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.3em] mt-3">Stock Accounting Portal</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.3em] mt-3">Milo & Beryl's Counting</p>
           </div>
         </div>
 
         <div className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {!isLogin && (
-              <div className="space-y-1.5 animate-in slide-in-from-top-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full p-4 bg-gray-50 border border-transparent rounded-2xl font-bold focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/20 outline-none transition-all"
-                  placeholder="Enter your name"
-                  required
-                />
-              </div>
-            )}
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Username</label>
               <input
@@ -111,21 +78,14 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
               type="submit"
               className="w-full py-5 bg-emerald-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-emerald-100 active:scale-95 transition-all mt-4"
             >
-              {isLogin ? 'Sign In' : 'Create Account'}
+              Sign In
             </button>
           </form>
-
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="w-full mt-8 text-xs font-bold text-gray-400 hover:text-emerald-600 transition-colors uppercase tracking-widest"
-          >
-            {isLogin ? "Don't have an account? Sign Up" : 'Already registered? Log In'}
-          </button>
         </div>
 
         <footer className="text-center pt-8">
-          <p className="text-[10px] text-gray-300 font-bold uppercase tracking-[0.4em]">Proprietary Software</p>
-          <p className="text-xs text-gray-400 font-black mt-1 opacity-60">Mir Rabbi Hossain</p>
+          <div className="w-8 h-1 bg-gray-200 mx-auto mb-4 rounded-full opacity-50"></div>
+          <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.25em] opacity-70">Developed By Mir Rabbi Hossain</p>
         </footer>
       </div>
     </div>

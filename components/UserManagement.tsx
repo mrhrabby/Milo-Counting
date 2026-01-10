@@ -216,8 +216,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onClose }) => {
           )}
         </div>
         
-        <div className="p-10 pt-0 text-center bg-white border-t border-gray-50">
-           <p className="text-[9px] text-gray-300 font-black uppercase tracking-[0.4em] mt-4">Pasar Besar Staff Portal</p>
+        <div className="p-8 pb-12 text-center bg-white border-t border-gray-50/50">
+           <p className="text-[9px] text-gray-400 font-black uppercase tracking-[0.3em] opacity-60">Developed By Mir Rabbi Hossain</p>
         </div>
       </div>
     </div>

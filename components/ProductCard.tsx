@@ -7,15 +7,17 @@ interface ProductCardProps {
   product: Product;
   counts: StockCounts;
   onChange: (field: keyof StockCounts, value: number) => void;
+  disabled?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, counts, onChange }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, counts, onChange, disabled }) => {
   const totalStorePcs = (counts.boxCount * product.pcsPerBox);
   const grandTotal = totalStorePcs + (counts.displayPcs || 0);
   
   const isLowStock = grandTotal < WARNING_THRESHOLD && grandTotal > 0;
 
   const handleInputChange = (field: keyof StockCounts, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     const val = parseInt(e.target.value) || 0;
     onChange(field, val);
   };
@@ -23,7 +25,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, counts, onCha
   return (
     <div className={`relative overflow-hidden p-5 rounded-3xl shadow-sm border transition-all duration-300 ${
       isLowStock ? 'bg-red-50 border-red-100' : 'bg-white border-gray-100 hover:shadow-md'
-    }`}>
+    } ${disabled ? 'opacity-80' : ''}`}>
       {/* Optimized Background Decoration for Mobile */}
       {product.imageUrl && (
         <div 
@@ -68,10 +70,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, counts, onCha
             <input
               type="number"
               inputMode="numeric"
+              disabled={disabled}
               value={counts.boxCount || ''}
               onChange={(e) => handleInputChange('boxCount', e)}
               placeholder="0"
-              className="w-full p-4 bg-gray-50/60 backdrop-blur-md border border-transparent rounded-2xl text-center text-xl font-black focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/20 focus:bg-white transition-all outline-none placeholder-gray-300"
+              className={`w-full p-4 border border-transparent rounded-2xl text-center text-xl font-black focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/20 transition-all outline-none placeholder-gray-300 ${
+                disabled ? 'bg-gray-100/50 cursor-not-allowed text-gray-400' : 'bg-gray-50/60 backdrop-blur-md focus:bg-white'
+              }`}
             />
           </div>
           <div className="space-y-1.5">
@@ -79,10 +84,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, counts, onCha
             <input
               type="number"
               inputMode="numeric"
+              disabled={disabled}
               value={counts.displayPcs || ''}
               onChange={(e) => handleInputChange('displayPcs', e)}
               placeholder="0"
-              className="w-full p-4 bg-gray-50/60 backdrop-blur-md border border-transparent rounded-2xl text-center text-xl font-black focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/20 focus:bg-white transition-all outline-none placeholder-gray-300"
+              className={`w-full p-4 border border-transparent rounded-2xl text-center text-xl font-black focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/20 transition-all outline-none placeholder-gray-300 ${
+                disabled ? 'bg-gray-100/50 cursor-not-allowed text-gray-400' : 'bg-gray-50/60 backdrop-blur-md focus:bg-white'
+              }`}
             />
           </div>
         </div>

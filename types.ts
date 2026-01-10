@@ -1,5 +1,14 @@
 
 export type UserRole = 'admin' | 'staff';
+export type VerificationStatus = 'Pending' | 'Ok' | 'Short' | 'Extra';
+
+export interface VerificationData {
+  status: VerificationStatus;
+  discrepancyQuantity?: number;
+  note?: string; // New field for detailed comments
+  verifiedBy?: string;
+  timestamp?: string;
+}
 
 export interface User {
   id: string;
@@ -32,7 +41,9 @@ export interface DailyRecord {
   entries: StockEntry[];
   totalMiloPcs: number;
   totalBeyrelsPcs: number;
-  recordedBy?: string; // Username of the person who saved it
+  recordedBy?: string; // Full name for display
+  recordedByUsername: string; // Username for access control
+  verification?: VerificationData;
 }
 
 export interface HistoryData {
