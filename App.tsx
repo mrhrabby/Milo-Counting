@@ -298,6 +298,14 @@ const App: React.FC = () => {
 
   const isAdmin = currentUser.role === 'admin';
 
+  // Determine if we should show the verification card for the current view
+  const showVerification = useMemo(() => {
+    const record = history[activeDate];
+    if (!record || !record.verification) return false;
+    // Show only if user is Admin OR user is the one who recorded this specific date's data
+    return isAdmin || record.recordedByUsername === currentUser.username;
+  }, [history, activeDate, currentUser, isAdmin]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-60">
       <header className="px-6 pt-10 pb-8 sticky top-0 z-50 shadow-lg bg-emerald-600">
@@ -347,7 +355,7 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {history[activeDate]?.verification && (
+        {showVerification && (
           <div className={`p-4 rounded-3xl flex flex-col gap-2 border shadow-sm animate-in zoom-in-95 ${
             history[activeDate].verification?.status === 'Ok' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
             history[activeDate].verification?.status === 'Short' ? 'bg-red-50 border-red-100 text-red-700' :
