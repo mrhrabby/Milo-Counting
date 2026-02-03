@@ -28,10 +28,9 @@ export interface HistoryData {
   [date: string]: DailyRecord;
 }
 
-// User role definition for access control levels
+// Added User and UserRole types to support authentication and user management
 export type UserRole = 'admin' | 'staff';
 
-// User structure for authentication and management features
 export interface User {
   id: string;
   username: string;
